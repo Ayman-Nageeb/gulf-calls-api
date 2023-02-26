@@ -12,6 +12,7 @@ use App\Models\Uae2Patient;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class PatientsController extends Controller
 {
@@ -52,6 +53,18 @@ class PatientsController extends Controller
         }
 
         $data = json_decode($request->input('data'), true);
+
+
+
+        if (DB::table('' . $centerModel->getTable())
+            ->whereJsonContains('data->code', $data['code'])
+            ->get()->count()
+        ) {
+            return new Response([
+                'has_error' => true,
+                'message' => 'code [' . $data['code'] . '] is already used',
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
         $centerModel->data = $request->input('data');
         $centerModel->save();
@@ -185,6 +198,58 @@ class PatientsController extends Controller
             'has_error' => false,
             'message' => 'retrieved successfully',
             'data' => $patients
+        ], Response::HTTP_OK);
+    }
+
+    public function destroy(Request $request, string $center, int $id)
+    {
+        $centerModel = null;
+        $center = strtoupper($center);
+        switch ($center) {
+            case 'ON1':
+                $centerModel = new Om1Patient();
+                break;
+            case 'ON2':
+                $centerModel = new Om2Patient();
+                break;
+            case 'UE1':
+                $centerModel = new Uae1Patient();
+                break;
+            case 'UE2':
+                $centerModel = new Uae2Patient();
+                break;
+            case 'KW1':
+                $centerModel = new KtPatient();
+                break;
+            case 'QR1':
+                $centerModel = new QrPatient();
+                break;
+            case 'BN1':
+                $centerModel = new BnPatient();
+                break;
+            default:
+                return new Response([
+                    'has_error' => true,
+                    'message' => 'unknown center ' . $center
+                ], Response::HTTP_BAD_REQUEST);
+        }
+
+
+        $centerModel = $centerModel->where(['id' => $id])->first();
+
+        if (!$centerModel) {
+            return new Response([
+                'has_error' => true,
+                'message' => 'unknown patient' . $id
+            ], Response::HTTP_BAD_REQUEST);
+        };
+
+        $centerModel->delete();
+
+        return  Response([
+            'has_error' => false,
+            'message' => 'removed successfully ',
+            'data' => $centerModel
         ], Response::HTTP_OK);
     }
 }

@@ -23,6 +23,7 @@ Route::middleware('valid-token')->group(function () {
 
     Route::post('/centers/{center}/patients', [PatientsController::class, 'store'])->name('centers.patients.store');
     Route::put('/centers/{center}/patients/{id}', [PatientsController::class, 'update'])->name('centers.patients.update');
+    Route::delete('/centers/{center}/patients/{id}', [PatientsController::class, 'destroy'])->name('centers.patients.remove');
     Route::get('/centers/{center}/patients/', [PatientsController::class, 'getCenterPatients'])->name('centers.patients.indexCenterPatients');
     Route::get('/patients', [PatientsController::class, 'indexPatients'])->name('centers.patients.indexPatients');
 });
